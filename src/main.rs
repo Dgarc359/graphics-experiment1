@@ -4,6 +4,7 @@ use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
 use sdl2::event::Event;
 use std::time::Duration;
+use sdl2::render::{TextureAccess};
 
 
 fn main() {
@@ -17,15 +18,21 @@ fn main() {
 
     let mut canvas = window.into_canvas().build().unwrap();
 
-    canvas.set_draw_color(Color::RGB(0, 255, 255));
+    let texture_creator = canvas.texture_creator();
+
+    let mut texture = texture_creator.create_texture(None, TextureAccess::Static, 500, 1).unwrap();
+    let pixels: [u8; 500] = [255; 500];
+
+    texture.update(None, &pixels, &pixels.len() * 8).unwrap();
+
+    println!("updated texture");
+
+    canvas.set_draw_color(Color::RGB(0, 0, 0));
     canvas.clear();
     canvas.present();
 
     let mut event_pump = sdl_context.event_pump().unwrap();
-    let mut i = 0;
     'running: loop {
-        i = (i + 1) % 255;
-        canvas.set_draw_color(Color::RGB(i, 64, 255 - i));
         canvas.clear();
         for event in event_pump.poll_iter() {
             match event {
