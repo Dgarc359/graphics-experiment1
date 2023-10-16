@@ -5,10 +5,10 @@ use sdl2::keyboard::Keycode;
 use sdl2::pixels::{Color,PixelFormatEnum};
 use sdl2::event::Event;
 use std::time::Duration;
-use sdl2::rect::{Rect, Point};
-const WIDTH: usize = 256;
-const HEIGHT: usize = 240;
+const WIDTH: usize = 255;
+const HEIGHT: usize = 255;
 const PITCH: usize = std::mem::size_of::<u32>() * WIDTH;
+const RESOLUTION: usize = WIDTH * HEIGHT * 4;
 
 
 fn main() {
@@ -16,7 +16,7 @@ fn main() {
     let video_subsystem = sdl_context.video().unwrap();
 
 
-    let window = video_subsystem.window("rust-sdl2 demo", 720, 480)
+    let window = video_subsystem.window("rust-sdl2 demo", 1000, 1000)
         .position_centered()
         .build()
         .unwrap();
@@ -39,10 +39,28 @@ fn main() {
     canvas.present();
     let mut event_pump = sdl_context.event_pump().unwrap();
     'running: loop {
+        let pixels_as_u8: &mut [u8] = &mut [255; RESOLUTION];
 
-        //const arr_width: usize = usize::try_from(WIDTH).unwrap() * 4;
+        //let mut i = 0;
+        //let mut y = 0;
 
-        let pixels_as_u8: &[u8] = &[255; 1024];
+            'outer: for y in 0..HEIGHT {
+                for x in 0..WIDTH {
+                    if x * y + 3 >= pixels_as_u8.len()
+                        || x * y + 2 >= pixels_as_u8.len()
+                        || x * y + 1 >= pixels_as_u8.len() {
+                        break 'outer
+                    }
+                    println!("x: {}, y: {}", x as u8, y as u8);
+                    let u8_x = x as u8;
+                    let u8_y = y as u8;
+                    pixels_as_u8[x * y] = u8_x;
+                    pixels_as_u8[x * y + 1] = u8_x.wrapping_add(u8_y);
+                    pixels_as_u8[x * y + 2] = u8_y;
+                    pixels_as_u8[x * y + 3] = 255;
+                }
+            }
+
         test.update(None, pixels_as_u8, PITCH).expect("couldnt copy raw pixels");
 
         canvas.copy(&test, None, None).expect("couldnt copy texture to canvas");
