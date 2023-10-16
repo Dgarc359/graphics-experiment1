@@ -1,10 +1,10 @@
 extern crate sdl2;
 
 use sdl2::keyboard::Keycode;
-use sdl2::pixels::Color;
+use sdl2::pixels::{Color, PixelFormatEnum};
 use sdl2::event::Event;
 use std::time::Duration;
-use sdl2::render::{TextureAccess};
+use sdl2::rect::Rect;
 
 
 fn main() {
@@ -17,18 +17,38 @@ fn main() {
         .unwrap();
 
     let mut canvas = window.into_canvas().build().unwrap();
+    canvas.set_draw_color(Color::RGB(255, 255, 255));
 
     let texture_creator = canvas.texture_creator();
 
-    let mut texture = texture_creator.create_texture(None, TextureAccess::Static, 500, 1).unwrap();
-    let pixels: [u8; 500] = [255; 500];
+    let mut texture = texture_creator
+        .create_texture_streaming(PixelFormatEnum::RGB24, 256, 256)
+        .map_err(|e| e.to_string()).unwrap();
 
-    texture.update(None, &pixels, &pixels.len() * 8).unwrap();
+    texture.with_lock(None, |buffer: &mut [u8], pitch: usize| {
+        for y in 0..256 {
+            for x in 0..256 {
+                let offset = y * pitch + x * 3;
+                buffer[offset] = 0;
+                buffer[offset + 1] = 0;
+                buffer[offset + 2] = 0;
+            }
+        }
+    }).unwrap();
 
     println!("updated texture");
 
-    canvas.set_draw_color(Color::RGB(0, 0, 0));
     canvas.clear();
+    canvas.copy(&texture, None, Some(Rect::new(100, 100, 256, 256))).unwrap();
+    canvas.copy_ex(
+        &texture,
+        None,
+        Some(Rect::new(450, 100, 256, 256)),
+        30.0,
+        None,
+        false,
+        false,
+    ).unwrap();
     canvas.present();
 
     let mut event_pump = sdl_context.event_pump().unwrap();
