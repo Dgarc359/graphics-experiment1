@@ -43,21 +43,14 @@ fn main() {
 
         for y in 0..HEIGHT {
             for x in 0..WIDTH {
-                pixels_as_u8[x * y] = x as u8;
-                let u8_x = x as u8;
-                pixels_as_u8[x * y + 1] = u8_x.wrapping_add(y as u8);
-                pixels_as_u8[x * y + 2] = y as u8;
-                pixels_as_u8[x * y + 3] = 255;
+                let i = (x * 4) + (y * PITCH);
+                pixels_as_u8[i] = x as u8;
+                pixels_as_u8[1 + i] = (x + y) as u8;
+                pixels_as_u8[2 + i] = y as u8;
+                pixels_as_u8[3 + i] = 255;
             }
         }
 
-        /*
-        while i < RESOLUTION{
-            pixels_as_u8[i] = 255;
-            pixels_as_u8[i + 3] = 255;
-            i = i + 4;
-        }
-        */
 
         let slice = &pixels_as_u8[0..100];
         println!("done with loop");
