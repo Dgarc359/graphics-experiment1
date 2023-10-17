@@ -7,7 +7,7 @@ use sdl2::event::Event;
 use std::time::Duration;
 const WIDTH: usize = 255;
 const HEIGHT: usize = 255;
-const PITCH: usize = std::mem::size_of::<u32>() * WIDTH;
+const PITCH: usize = 4 * WIDTH;
 const RESOLUTION: usize = WIDTH * HEIGHT * 4;
 
 
@@ -38,28 +38,52 @@ fn main() {
 
     canvas.present();
     let mut event_pump = sdl_context.event_pump().unwrap();
+
+        let pixels_as_u8: &mut [u8] = &mut [0; RESOLUTION];
+
+        for y in 0..HEIGHT {
+            for x in 0..WIDTH {
+                pixels_as_u8[x * y] = x as u8;
+                let u8_x = x as u8;
+                pixels_as_u8[x * y + 1] = u8_x.wrapping_add(y as u8);
+                pixels_as_u8[x * y + 2] = y as u8;
+                pixels_as_u8[x * y + 3] = 255;
+            }
+        }
+
+        /*
+        while i < RESOLUTION{
+            pixels_as_u8[i] = 255;
+            pixels_as_u8[i + 3] = 255;
+            i = i + 4;
+        }
+        */
+
+        let slice = &pixels_as_u8[0..100];
+        println!("done with loop");
+        println!("slice: {:#?}", slice);
     'running: loop {
-        let pixels_as_u8: &mut [u8] = &mut [255; RESOLUTION];
+
 
         //let mut i = 0;
-        //let mut y = 0;
-
-            'outer: for y in 0..HEIGHT {
-                for x in 0..WIDTH {
-                    if x * y + 3 >= pixels_as_u8.len()
-                        || x * y + 2 >= pixels_as_u8.len()
-                        || x * y + 1 >= pixels_as_u8.len() {
-                        break 'outer
-                    }
-                    println!("x: {}, y: {}", x as u8, y as u8);
-                    let u8_x = x as u8;
-                    let u8_y = y as u8;
-                    pixels_as_u8[x * y] = u8_x;
-                    pixels_as_u8[x * y + 1] = u8_x.wrapping_add(u8_y);
-                    pixels_as_u8[x * y + 2] = u8_y;
-                    pixels_as_u8[x * y + 3] = 255;
+        /*
+        'outer: for y in 0..HEIGHT {
+            for x in 0..WIDTH {
+                if x * y + 3 >= pixels_as_u8.len()
+                    || x * y + 2 >= pixels_as_u8.len()
+                    || x * y + 1 >= pixels_as_u8.len() {
+                    break 'outer
                 }
+                println!("x: {}, y: {}", x as u8, y as u8);
+                let u8_x = x as u8;
+                let u8_y = y as u8;
+                pixels_as_u8[x * y] = u8_x;
+                pixels_as_u8[x * y + 1] = u8_x.wrapping_add(u8_y);
+                pixels_as_u8[x * y + 2] = u8_y;
             }
+        }
+        */
+
 
         test.update(None, pixels_as_u8, PITCH).expect("couldnt copy raw pixels");
 
