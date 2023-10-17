@@ -35,6 +35,10 @@ fn main() {
         HEIGHT as u32,
     ).unwrap();
 
+    let center_x = WIDTH / 2;
+    let center_y = HEIGHT / 2;
+    let radius = 25;
+
 
     canvas.present();
     let mut event_pump = sdl_context.event_pump().unwrap();
@@ -43,11 +47,25 @@ fn main() {
 
         for y in 0..HEIGHT {
             for x in 0..WIDTH {
-                let i = (x * 4) + (y * PITCH);
-                pixels_as_u8[i] = x as u8;
-                pixels_as_u8[1 + i] = (x + y) as u8;
-                pixels_as_u8[2 + i] = y as u8;
-                pixels_as_u8[3 + i] = 255;
+                let x_dist = if center_x < x {
+                    (x.checked_sub(center_x).unwrap()) as f32
+                } else {
+                    (center_x.checked_sub(x).unwrap()) as f32
+                };
+                let y_dist = if center_y < y {
+                    (y.checked_sub(center_y).unwrap()) as f32
+                } else {
+                    (center_y.checked_sub(y).unwrap()) as f32
+                };
+
+                let distance = f32::sqrt(x_dist.powi(2) + y_dist.powi(2));
+                if distance.round() as i32 <= radius {
+                    let i = (x * 4) + (y * PITCH);
+                    pixels_as_u8[i] = x as u8;
+                    pixels_as_u8[1 + i] = (x + y) as u8;
+                    pixels_as_u8[2 + i] = y as u8;
+                    pixels_as_u8[3 + i] = 255;
+                }
             }
         }
 
