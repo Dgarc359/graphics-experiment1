@@ -1,6 +1,10 @@
 #[allow(dead_code, unused_variables, unused_braces)]
 extern crate sdl2;
 
+mod local_util;
+use local_util::linear2srgb;
+
+
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::{Color,PixelFormatEnum};
 use sdl2::event::Event;
@@ -15,7 +19,6 @@ fn main() {
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
 
-
     let window = video_subsystem.window("rust-sdl2 demo", 1000, 1000)
         .position_centered()
         .build()
@@ -29,15 +32,16 @@ fn main() {
     let texture_creator = canvas.texture_creator();
 
     // create textures
-    let mut test = texture_creator.create_texture_streaming(
+    let mut texture = texture_creator.create_texture_streaming(
         PixelFormatEnum::RGBA8888,
         WIDTH as u32,
         HEIGHT as u32,
     ).unwrap();
 
+
     let center_x = WIDTH / 2;
     let center_y = HEIGHT / 2;
-    let radius = 25;
+    let radius = 100f32;
 
 
     canvas.present();
@@ -59,12 +63,23 @@ fn main() {
                 };
 
                 let distance = f32::sqrt(x_dist.powi(2) + y_dist.powi(2));
-                if distance.round() as i32 <= radius {
+                if distance <= radius {
+
+                    println!("distance {:?} radius {:?}", distance, radius);
+                    let distance_percentage = 1_f32 - (distance / radius);
+
                     let i = (x * 4) + (y * PITCH);
-                    pixels_as_u8[i] = x as u8;
-                    pixels_as_u8[1 + i] = (x + y) as u8;
-                    pixels_as_u8[2 + i] = y as u8;
-                    pixels_as_u8[3 + i] = 255;
+                    /*
+                    pixels_as_u8[i] = x as u8; // A
+                    pixels_as_u8[1 + i] = (x + y) as u8; // B
+                    pixels_as_u8[2 + i] = y as u8; // G
+                    pixels_as_u8[3 + i] = 255; // R
+                    */
+                    println!("distance percent {:?}", distance_percentage);
+                    pixels_as_u8[i] = 0;
+                    pixels_as_u8[1 + i] = linear2srgb(distance_percentage);
+                    pixels_as_u8[2 + i] = 0;
+                    pixels_as_u8[3 + i] = 0;
                 }
             }
         }
@@ -72,33 +87,13 @@ fn main() {
 
         let slice = &pixels_as_u8[0..100];
         println!("done with loop");
-        println!("slice: {:#?}", slice);
+        //println!("slice: {:#?}", slice);
     'running: loop {
 
 
-        //let mut i = 0;
-        /*
-        'outer: for y in 0..HEIGHT {
-            for x in 0..WIDTH {
-                if x * y + 3 >= pixels_as_u8.len()
-                    || x * y + 2 >= pixels_as_u8.len()
-                    || x * y + 1 >= pixels_as_u8.len() {
-                    break 'outer
-                }
-                println!("x: {}, y: {}", x as u8, y as u8);
-                let u8_x = x as u8;
-                let u8_y = y as u8;
-                pixels_as_u8[x * y] = u8_x;
-                pixels_as_u8[x * y + 1] = u8_x.wrapping_add(u8_y);
-                pixels_as_u8[x * y + 2] = u8_y;
-            }
-        }
-        */
+        texture.update(None, pixels_as_u8, PITCH).expect("couldnt copy raw pixels");
 
-
-        test.update(None, pixels_as_u8, PITCH).expect("couldnt copy raw pixels");
-
-        canvas.copy(&test, None, None).expect("couldnt copy texture to canvas");
+        canvas.copy(&texture, None, None).expect("couldnt copy texture to canvas");
 
         canvas.present();
         for event in event_pump.poll_iter() {
