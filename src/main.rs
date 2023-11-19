@@ -63,23 +63,33 @@ fn main() {
                 };
 
                 let distance = f32::sqrt(x_dist.powi(2) + y_dist.powi(2));
-                if distance <= radius {
+                    let i = (x * 4) + (y * PITCH);
+
+                    let buffer = 3_f32;
+                    let distance_percentage = 1_f32 - (distance / radius);
+                if distance < radius - buffer {
 
                     println!("distance {:?} radius {:?}", distance, radius);
-                    let distance_percentage = 1_f32 - (distance / radius);
 
-                    let i = (x * 4) + (y * PITCH);
                     /*
                     pixels_as_u8[i] = x as u8; // A
                     pixels_as_u8[1 + i] = (x + y) as u8; // B
                     pixels_as_u8[2 + i] = y as u8; // G
                     pixels_as_u8[3 + i] = 255; // R
                     */
-                    println!("distance percent {:?}", distance_percentage);
                     pixels_as_u8[i] = 0;
-                    pixels_as_u8[1 + i] = linear2srgb(distance_percentage);
+                    //pixels_as_u8[1 + i] = linear2srgb(distance_percentage);
+                    pixels_as_u8[1 + i] = 255;
                     pixels_as_u8[2 + i] = 0;
                     pixels_as_u8[3 + i] = 0;
+                } else if distance <= radius {
+                    println!("distance percent {:?}", distance_percentage);
+                    let new_val = (distance_percentage * 255_f32).clamp(0.0, 255.0);
+                    println!("value for linear 2 srgb {:?}", new_val);
+                    pixels_as_u8[i] = 0;
+                    pixels_as_u8[1 + i] = linear2srgb(distance_percentage);
+                    pixels_as_u8[2 + i] = linear2srgb(distance_percentage);
+                    pixels_as_u8[3 + i] = linear2srgb(distance_percentage);
                 }
             }
         }
