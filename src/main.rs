@@ -44,11 +44,13 @@ fn main() {
 
     for y in 0..HEIGHT {
         for x in 0..WIDTH {
+
             let x_dist = if center_x < x {
                 (x.checked_sub(center_x).unwrap()) as f32
             } else {
                 (center_x.checked_sub(x).unwrap()) as f32
             };
+
             let y_dist = if center_y < y {
                 (y.checked_sub(center_y).unwrap()) as f32
             } else {
@@ -59,18 +61,15 @@ fn main() {
             let i = (x * 4) + (y * PITCH);
 
             let buffer = 1_f32;
-            let distance_percentage = 1_f32 - (distance / radius);
+            let stroke =  radius - distance;
             if distance < radius - buffer {
                 pixels_as_u8[i] = 0;
                 pixels_as_u8[1 + i] = 255;
                 pixels_as_u8[2 + i] = 0;
                 pixels_as_u8[3 + i] = 0;
-            } else if distance <= radius {
-                println!("distance percent {:?}", distance_percentage);
-                let new_val = distance_percentage * 255_f32;
-                println!("value for linear 2 srgb {:?}", new_val);
+            } else if distance <= radius + buffer {
                 pixels_as_u8[i] = 0;
-                pixels_as_u8[1 + i] = linear2srgb(new_val);
+                pixels_as_u8[1 + i] = linear2srgb(stroke);
                 pixels_as_u8[2 + i] = 0;
                 pixels_as_u8[3 + i] = 0;
             } else {
