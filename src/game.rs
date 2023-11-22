@@ -1,6 +1,9 @@
+
 pub mod game {
 
     // TODO: private vs public methods in private module
+
+    use std::collections::HashMap;
 
     pub trait ExternalMinesweeper {
         fn get_width(&self) -> usize;
@@ -12,20 +15,18 @@ pub mod game {
         /// Returns true if BOOM!
         fn explore_tile(&self, x: usize, y: usize) -> bool;
         /// Return whether a tile should be displayed as blank, a flag, a cleared mine, a mine count 1-8, or a kaboom.
-        fn get_tile(&self, x: usize, y: usize) -> MapTile;
+        fn get_tile(&self, x: usize, y: usize) -> Option<&MapTile>;
     }
 
-    #[allow(dead_code)]
     pub struct MapTile {
-        x: usize,
-        y: usize,
-        flag_toggled: bool,
-        has_bomb: bool,
+        pub x: usize,
+        pub y: usize,
+        pub flag_toggled: bool,
+        pub has_bomb: bool,
     }
-
 
     pub struct GameState {
-        map: Vec<&'static MapTile>,
+        pub map: HashMap<String, MapTile>,
     }
 
     pub struct Game {
@@ -34,15 +35,29 @@ pub mod game {
         game_state: GameState,
     }
 
-    #[allow(dead_code)]
     pub fn new_game(width: usize, height: usize) -> Game {
-        let map = generate_map();
-        Game { width, height, game_state: GameState { map } }
+        let map = generate_map(width, height);
+        Game {
+            width,
+            height,
+            game_state: GameState { map },
+        }
     }
 
-    #[allow(dead_code)]
-    pub fn generate_map() -> Vec<&'static MapTile> {
-        vec![]
+    pub fn generate_map(x: usize, y: usize) -> HashMap<String, MapTile> {
+        let mut hm = HashMap::new();
+        for x_cord in 0..x {
+            for y_cord in 0..y {
+                let map_key = format!("{}:{}", x_cord, y_cord);
+                let map_tile = MapTile { x: x_cord, y: y_cord, has_bomb: false, flag_toggled: false };
+
+                hm.insert(
+                    map_key,
+                    map_tile,
+                );
+            }
+        }
+        hm
     }
 
     impl ExternalMinesweeper for Game {
@@ -63,13 +78,9 @@ pub mod game {
             true
         }
         /// Return whether a tile should be displayed as blank, a flag, a cleared mine, a mine count 1-8, or a kaboom.
-        fn get_tile(&self, x: usize, y: usize) -> MapTile {
-            MapTile {
-                x,
-                y,
-                has_bomb: true,
-                flag_toggled: false,
-            }
+        fn get_tile(&self, x: usize, y: usize) -> Option<&MapTile> {
+            let key = &format!("{}:{}",x, y);
+            self.game_state.map.get(key)
         }
     }
 }
@@ -85,5 +96,15 @@ mod tests {
 
         assert_eq!(new_game.get_width(), 10);
         assert_eq!(new_game.get_height(), 10);
+    }
+
+    #[test]
+    fn test_map() {
+        let new_game = game::new_game(10, 10);
+
+        let res = new_game.get_tile(1, 1).unwrap().to_owned();
+        assert_eq!(false, res.has_bomb);
+        assert_eq!(false, res.flag_toggled);
+
     }
 }
