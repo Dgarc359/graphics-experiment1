@@ -21,8 +21,8 @@ pub mod game {
     pub struct MapTile {
         pub x: usize,
         pub y: usize,
-        pub flag_toggled: bool,
-        pub has_bomb: bool,
+        pub has_flag: bool,
+        pub has_mine: bool,
     }
 
     pub struct GameState {
@@ -32,14 +32,16 @@ pub mod game {
     pub struct Game {
         width: usize,
         height: usize,
+        num_of_mines: usize,
         game_state: GameState,
     }
 
-    pub fn new_game(width: usize, height: usize) -> Game {
+    pub fn new_game(width: usize, height: usize, num_of_mines: usize) -> Game {
         let map = generate_map(width, height);
         Game {
             width,
             height,
+            num_of_mines,
             game_state: GameState { map },
         }
     }
@@ -49,7 +51,7 @@ pub mod game {
         for x_cord in 0..x {
             for y_cord in 0..y {
                 let map_key = format!("{}:{}", x_cord, y_cord);
-                let map_tile = MapTile { x: x_cord, y: y_cord, has_bomb: false, flag_toggled: false };
+                let map_tile = MapTile { x: x_cord, y: y_cord, has_mine: false, has_flag: false };
 
                 hm.insert(
                     map_key,
@@ -70,7 +72,19 @@ pub mod game {
         }
 
         /// Toggle the presence of a flag on a tile.
-        fn toggle_flag(&self, _x: usize, _y: usize) {}
+        fn toggle_flag(&self, x: usize, y: usize) {
+            let key = format!("{}:{}", x, y);
+            let old_tile = self.game_state.map.get(&key).unwrap();
+
+            let new_tile = MapTile {
+                x: old_tile.x,
+                y: old_tile.y,
+                has_flag: !old_tile.has_flag,
+                has_mine: old_tile.has_mine,
+            };
+
+            //self.to_owned().game_state.map.insert(key, new_tile);
+        }
         /// Explore a tile. If it was a mine, BOOM! If not, flood fill mine scouting out from it.
         ///
         /// Returns true if BOOM!
@@ -92,7 +106,7 @@ mod tests {
 
     #[test]
     fn test_new() {
-        let new_game = game::new_game(10, 10);
+        let new_game = game::new_game(10, 10, 3);
 
         assert_eq!(new_game.get_width(), 10);
         assert_eq!(new_game.get_height(), 10);
@@ -100,11 +114,12 @@ mod tests {
 
     #[test]
     fn test_map() {
-        let new_game = game::new_game(10, 10);
+        let new_game = game::new_game(10, 10, 3);
 
         let res = new_game.get_tile(1, 1).unwrap().to_owned();
-        assert_eq!(false, res.has_bomb);
-        assert_eq!(false, res.flag_toggled);
+        // TODO: refactor test or remove or adjust, because mines will be added randomly
+        assert_eq!(false, res.has_mine);
+        assert_eq!(false, res.has_flag);
 
     }
 }
