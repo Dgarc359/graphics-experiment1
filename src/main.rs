@@ -1,5 +1,6 @@
 extern crate sdl2;
 
+mod game;
 mod local_util;
 use local_util::linear2srgb;
 
@@ -44,7 +45,6 @@ fn main() {
 
     for y in 0..HEIGHT {
         for x in 0..WIDTH {
-
             let x_dist = if center_x < x {
                 (x.checked_sub(center_x).unwrap()) as f32
             } else {
@@ -61,7 +61,7 @@ fn main() {
             let i = (x * 4) + (y * PITCH);
 
             let buffer = 1_f32;
-            let stroke =  radius - distance;
+            let stroke = radius - distance;
             if distance < radius - buffer {
                 pixels_as_u8[i] = 0;
                 pixels_as_u8[1 + i] = 255;
