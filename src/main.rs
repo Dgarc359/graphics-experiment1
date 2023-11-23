@@ -2,17 +2,19 @@ extern crate sdl2;
 
 mod assets;
 mod game;
-mod local_util;
-use local_util::linear2srgb;
-use std::path::Path;
+mod util;
 use std::env;
+use std::path::Path;
+use util::linear2srgb;
 
 use sdl2::event::Event;
+use sdl2::image::{InitFlag, LoadTexture};
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::{Color, PixelFormatEnum};
-use sdl2::rect::{Rect};
-use sdl2::image::{InitFlag, LoadTexture};
+use sdl2::rect::Rect;
 use std::time::Duration;
+
+use crate::game::ExternalMinesweeper;
 const WIDTH: usize = 255;
 const HEIGHT: usize = 255;
 const PITCH: usize = 4 * WIDTH;
@@ -37,16 +39,34 @@ fn main() {
 
     let mut event_pump = sdl_context.event_pump().unwrap();
 
-
     let pwd = env::current_dir().unwrap();
     let pwd_str = pwd.to_str().unwrap();
-    let path = Path::new(pwd_str).join("src").join("smile.png");
-    println!("{:?}", path.to_str().unwrap());
-    let texture = texture_creator.load_texture(path).unwrap();
-    let rect = Rect::new(10, 10, 50, 50);
-    canvas.copy(&texture, None, rect).unwrap();
-    canvas.present();
+    let mine_img_path = Path::new(pwd_str).join("src").join("mine.png");
+    let has_mine_img_path = Path::new(pwd_str).join("src").join("has_mine.png");
 
+    println!("{:?}", mine_img_path.to_str().unwrap());
+    let block = texture_creator.load_texture(mine_img_path).unwrap();
+    let mine = texture_creator.load_texture(has_mine_img_path).unwrap();
+    let mut game = game::new_game(10, 10, 3);
+    let padding = 60_i32;
+    for y in 0..game.get_height() {
+        for x in 0..game.get_width() {
+            let rect = Rect::new(
+                (x as i32 * padding) + 100,
+                (y as i32 * padding) + 100,
+                50,
+                50,
+            );
+            if game.explore_tile(x, y) {
+                canvas.copy(&mine, None, rect).unwrap();
+            } else {
+                canvas.copy(&block, None, rect).unwrap();
+            }
+        }
+    }
+    //let rect = Rect::new(10, 10, 50, 50);
+    //canvas.copy(&texture, None, rect).unwrap();
+    canvas.present();
 
     'running: loop {
         for event in event_pump.poll_iter() {
@@ -56,6 +76,17 @@ fn main() {
                     keycode: Some(Keycode::Escape),
                     ..
                 } => break 'running,
+                Event::MouseButtonDown {
+                    timestamp,
+                    window_id,
+                    which,
+                    mouse_btn,
+                    clicks,
+                    x,
+                    y,
+                } => {
+                    println!("x: {} y: {}", x, y);
+                }
                 _ => {}
             }
         }
@@ -64,10 +95,7 @@ fn main() {
     }
 }
 
-fn make_circle(
-    radius: f32,
-    pixels_as_u8: &mut [u8],
-) {
+fn make_circle(radius: f32, pixels_as_u8: &mut [u8]) {
     let center_x = WIDTH / 2;
     let center_y = HEIGHT / 2;
 

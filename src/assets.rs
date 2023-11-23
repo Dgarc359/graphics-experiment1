@@ -6,11 +6,9 @@ pub struct Asset {
     pub buffer: Vec<u8>,
 }
 
-
 fn get_image() -> bool {
     true
 }
-
 
 pub struct Assets {
     pub list: Vec<Assets>,
