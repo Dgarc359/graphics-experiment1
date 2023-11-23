@@ -30,6 +30,8 @@ fn main() {
         .unwrap();
 
     let mut canvas = window.into_canvas().build().unwrap();
+    canvas.set_draw_color(Color::RGB(0, 0, 0));
+    canvas.clear();
 
     let texture_creator = canvas.texture_creator();
 
